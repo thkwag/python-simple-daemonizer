@@ -10,10 +10,10 @@ setup(
     url              = 'https://github.com/thkwag/python-simple-daemonizer',
     download_url     = 'https://github.com/thkwag/python-simple-daemonizer/archive/v0.1.0.tar.gz',
     install_requires = [
-        'daemon=2.3.0'
+        'python-daemon==2.3.0'
     ],
     packages         = find_packages(exclude = ['docs', 'tests*']),
-    keywords         = ['daemon'],
+    keywords         = ['daemonizer, daemon'],
     python_requires  = '>=3',
     zip_safe=False
 )
