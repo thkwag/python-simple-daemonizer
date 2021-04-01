@@ -2,7 +2,7 @@
 
 ## Install
 ```
-pip install https://github.com/thkwag/python-simple-daemonizer/archive/v0.1.0.tar.gz
+pip install https://github.com/thkwag/python-simple-daemonizer/archive/v0.1.1.tar.gz
 ```
 
 ## Uninstall
