@@ -1,2 +1,1 @@
-# python-simple-daemonizer
-Python Simple Daemonizer
+# Python Simple Daemonizer
