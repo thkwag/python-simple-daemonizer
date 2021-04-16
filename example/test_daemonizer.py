@@ -14,6 +14,8 @@ script_base_dir = os.path.dirname(os.path.realpath(__file__))
 daemon_name = os.path.splitext(os.path.basename(__file__))[0]
 
 cnt = 0
+
+
 def do_something(arg1, arg2):
     global logger
     global cnt
@@ -41,21 +43,21 @@ def get_logger(name, log_dir):
     logger.addHandler(console_handler)
 
     file_handler = logging.handlers.TimedRotatingFileHandler(
-        filename = log_dir + name + '.log',
-        when='midnight', 
+        filename=log_dir + name + '.log',
+        when='midnight',
         interval=1,
         encoding='utf-8'
-        )
+    )
     file_handler.suffix = '.%Y%m%d'
     file_handler.setFormatter(logging.Formatter(
-            '[%(asctime)s][%(levelname)s][%(filename)s:%(lineno)d] %(message)s'
-        ))
+        '[%(asctime)s][%(levelname)s][%(filename)s:%(lineno)d] %(message)s'
+    ))
     logger.addHandler(file_handler)
 
     return logger, file_handler
 
-def main():
 
+def main():
     if sys.platform == "win32" or (len(sys.argv) > 1 and sys.argv[1] == '--'):
         do_something('foo', 'bar')
 
@@ -66,16 +68,15 @@ def main():
 
         cmd = sys.argv[1]
         daemon = SimpleDaemonizer(
-                daemon_name,
-                script_base_dir,
-                log_file_handler = file_handler
-            )
+            daemon_name,
+            script_base_dir,
+            log_file_handler=file_handler
+        )
         daemon.register_func(do_something, 'foo', 'bar')
         daemon.run_command(cmd)
 
-if __name__ == "__main__":
 
+if __name__ == "__main__":
     logger, file_handler = get_logger(daemon_name, script_base_dir + os.sep + 'logs' + os.sep)
 
     main()
-

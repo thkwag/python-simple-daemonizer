@@ -8,68 +8,78 @@ from daemon import pidfile
 import logging
 import logging.handlers
 
+
 class SimpleDaemonizer:
 
     def __init__(
             self,
             daemon_name,
             working_directory,
-            pid_dir = "./.pids",
-            log_dir = "./logs",
-            log_file_handler:logging.Handler = None,
-        ) -> None:
+            pid_dir="./.pids",
+            log_dir="./logs",
+            log_file_handler: logging.Handler = None,
+            log_level:int = logging.DEBUG,
+            func=None,
+            args=None,
+            umask=0o077
+    ) -> None:
 
         self.daemon_name = daemon_name
         self.working_directory = working_directory
         self.log_file_handler = log_file_handler
+        self.func = func
+        self.args = args
+        self.log_level = log_level
+        self.umask = umask
 
         self.log_dir = re.sub("/$", "", log_dir) + os.sep
-        if not os.path.exists(self.log_dir): os.makedirs(self.log_dir)
+        if not os.path.exists(self.log_dir):
+            os.makedirs(self.log_dir)
 
         self.pid_dir = re.sub("/$", "", pid_dir) + os.sep
-        if not os.path.exists(self.pid_dir): os.makedirs(self.pid_dir)
+        if not os.path.exists(self.pid_dir):
+            os.makedirs(self.pid_dir)
 
         self.pid_lock_file = pidfile.PIDLockFile(self.pid_dir + daemon_name + '.pid')
 
         self._init_logger()
 
     def _init_logger(self):
-
-        log_level = logging.DEBUG
-
         self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(log_level)
+        self.logger.setLevel(self.log_level)
+        self.logger.propagate = False
 
         if self.log_file_handler is None:
             file_log_formatter = logging.Formatter(
-                    '[%(asctime)s][%(levelname)s][%(filename)s:%(lineno)d] %(message)s'
-                )
+                '[%(asctime)s][%(levelname)s][%(filename)s:%(lineno)d] %(message)s'
+            )
             file_handler = logging.handlers.TimedRotatingFileHandler(
-                filename = self.log_dir + self.daemon_name + '.log',
-                when='midnight', 
+                filename=self.log_dir + self.daemon_name + '.log',
+                when='midnight',
                 interval=1,
                 encoding='utf-8'
-                )
-            file_handler.suffix = '.%Y%m%d'
+            )
+            file_handler.suffix = '%Y%m%d'
             file_handler.setFormatter(file_log_formatter)
 
             self.log_file_handler = file_handler
-            
+
         self.logger.addHandler(self.log_file_handler)
 
+        self.stdout = None
+        self.stderr = None
+        
     def _daemonize(self):
         try:
             with daemon.DaemonContext(
-                    working_directory = self.working_directory,
-                    umask = 0o077,
-                    pidfile = self.pid_lock_file,
-                    stdout = None,
-                    stderr = None,
+                    working_directory=self.working_directory,
+                    umask=self.umask,
+                    pidfile=self.pid_lock_file,
+                    stdout=self.stdout,
+                    stderr=self.stderr,
                     files_preserve=[self.log_file_handler.stream]
-                ) as context:
-
+            ) as context:
                 self.logger.info(f"Daemon '{self.daemon_name}' started")
-
                 self.func(*self.args)
 
         except Exception as e:
@@ -87,7 +97,7 @@ class SimpleDaemonizer:
             elif command == 'stop':
                 self.stop()
             elif command == 'restart':
-                self.stop(restart = True)
+                self.stop(restart=True)
             elif command == 'status':
                 self.status()
             else:
@@ -95,7 +105,7 @@ class SimpleDaemonizer:
 
         except Exception as e:
             traceback.print_exc()
-            
+
     def start(self):
         if self.pid_lock_file.is_locked():
             lock_pid = self.pid_lock_file.read_pid()
@@ -103,10 +113,10 @@ class SimpleDaemonizer:
             exit(0)
 
         print(f"Daemon '{self.daemon_name}' started.")
-        
+
         self._daemonize()
 
-    def stop(self, restart = False):
+    def stop(self, restart=False):
         if not self.pid_lock_file.is_locked():
             print(f"Daemon '{self.daemon_name}' is not started.")
             exit(0)
